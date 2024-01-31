@@ -1,11 +1,12 @@
 [project]
 name = "gpts"
-version = "0.0.1"
+version = "0.0.2"
 authors = [
     { name="Jason Wilkes", email="notarealdeveloper@gmail.com" },
 ]
 description = "Unix language driver for software 2.0"
 dependencies = [
+    "llama-cpp-python",
 ]
 
 [project.optional-dependencies]
