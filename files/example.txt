@@ -1,0 +1,4 @@
+Hello, I am Alex and I am a software engineer with over 5 years of experience in the industry. 
+I specialize in building scalable and efficient web applications using technologies such as JavaScript, Node.js, and React. I have a strong background in problem-solving and algorithm design, and I am passionate about writing clean and maintainable code. 
+In my current role at Amazon, I lead a team of engineers in the development and maintenance of a large-scale e-commerce platform, where I am responsible for ensuring that our software is of the highest quality and meets the needs of our users. I am always looking to learn new technologies and expand my skillset, 
+and I am excited about the opportunities and challenges that the future holds in the ever-evolving field of software engineering.
