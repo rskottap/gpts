@@ -69,7 +69,7 @@ class Model:
     def __call__(self, *args, **kwds):
         return self.ask(*args, **kwds)
 
-    def ask(self, question, max_tokens=512, verbose=False):
+    def ask(self, question, max_tokens=512):
 
         output = self.llm(
             f"[INST] {question} [/INST]",
@@ -82,7 +82,7 @@ class Model:
         else:
             return re.sub(r"[\s\S]*?\[/INST\] ", "", output["choices"][0]["text"])
 
-    def chat(self, user_prompt, system_prompt=None, verbose=False):
+    def chat(self, user_prompt, system_prompt=None):
 
         # TODO: Do we need to create a new instance here? It's extremely quick
         # so this may be simpler than keeping the state. Can we do this for .ask()?
@@ -90,6 +90,7 @@ class Model:
         llm = Llama(
             model_path = self.path(),
             chat_format="llama-2",
+            verbose = self.verbose,
         )
 
         messages = []
