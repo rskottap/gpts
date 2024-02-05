@@ -43,15 +43,17 @@ class Model:
         We'll learn the right abstractions as we go.
     """
 
-    def __init__(self, context_length=2048):
+    def __init__(self, context_length=2048, verbose=False):
 
         self.ensure_have_model()
+        self.verbose = verbose
 
         self.llm = Llama(
             model_path = self.path(),
             n_ctx = context_length,
             n_threads = os.cpu_count(),
             n_gpu_layers = 0,
+            verbose = self.verbose,
         )
 
     def url(self):
@@ -90,9 +92,9 @@ class Model:
             f"[INST] {question} [/INST]",
             max_tokens=max_tokens,
             stop=["</s>"],
-            echo=True
+            echo=True,
         )
-        if verbose:
+        if self.verbose:
             return output
         else:
             return re.sub(r"[\s\S]*?\[/INST\] ", "", output["choices"][0]["text"])
