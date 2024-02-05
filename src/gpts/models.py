@@ -7,7 +7,11 @@ __all__ = [
 import os
 import re
 import sys
+from pathlib import Path
+
 from llama_cpp import Llama
+
+from kern import image, pdf
 
 
 def gpu_is_available():
@@ -17,6 +21,19 @@ def gpu_is_available():
     except:
         return False
 
+
+def get_text(path):
+    path = Path(path)
+    if path.suffix == ".txt":
+        with open(path, "r") as f:
+            return f.read()
+    elif path.suffix == ".pdf":
+        return pdf.to_text(path)
+    elif path.suffix in [".jpg", ".jpeg", ".png"]:
+        return image.to_text(path)
+    else:
+        return None
+    
 
 class Model:
 
@@ -67,18 +84,35 @@ class Model:
     def __call__(self, *args, **kwds):
         return self.ask(*args, **kwds)
 
-    def ask(self, question, verbose=False):
+    def ask(self, question, max_tokens=512, verbose=False):
 
         output = self.llm(
             f"[INST] {question} [/INST]",
-            max_tokens=512,
+            max_tokens=max_tokens,
             stop=["</s>"],
             echo=True
         )
         if verbose:
             return output
         else:
-            return re.sub('.*?\[/INST\] ', '', output['choices'][0]['text'])
+            return re.sub(r"[\s\S]*?\[/INST\] ", "", output["choices"][0]["text"])
+    
+    def query(self, question, path, max_tokens=512, verbose=False):
+        """Query a document with a question.
+        Pdf, text and image files are supported."""
+
+        path = Path(path)
+        if not path.exists():
+            raise FileNotFoundError(f"No such file or directory: {path!r}")
+
+        content = get_text(path)
+        if content:
+            prompt = question + "\n" + "Document: \n" + content
+            return self.ask(prompt, max_tokens, verbose)
+        else:
+            raise ValueError(
+                f"Unsupported file type {path.suffix!r}. Only text, pdf and image (jpg, jpeg, png) files are supported. Skipping..."
+            )
 
     def chat(self, user_prompt, system_prompt=None, verbose=False):
 
