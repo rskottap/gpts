@@ -108,7 +108,7 @@ class Model:
 
         output = llm.create_chat_completion(messages=messages)
 
-        if verbose:
+        if self.verbose:
             return output
         else:
             return output['choices'][0]['message']['content'].strip()
