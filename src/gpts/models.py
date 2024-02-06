@@ -30,12 +30,13 @@ class Model:
 
         self.ensure_have_model()
         self.verbose = verbose
+        self.gpu_is_available = gpu_is_available() 
 
         self.llm = Llama(
             model_path = self.path(),
             n_ctx = context_length,
-            n_threads = os.cpu_count(),
-            n_gpu_layers = 0,
+            n_threads = None if self.gpu_is_available else os.cpu_count(),
+            n_gpu_layers = -1 if self.gpu_is_available else 0,
             verbose = self.verbose,
         )
 
