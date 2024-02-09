@@ -7,10 +7,10 @@ def ask(model):
 
 
 def test_mistral_ask():
-    model = gpts.Mistral()
+    model = gpts.Mistral(cpu_only=True)
     ask(model)
 
 
 def test_mixtral_ask():
-    model = gpts.Mixtral()
+    model = gpts.Mixtral(cpu_only=True)
     ask(model)
