@@ -7,6 +7,7 @@ __all__ = [
 import os
 import re
 import sys
+
 from llama_cpp import Llama
 
 
@@ -43,8 +44,12 @@ class Model:
     def url(self):
         return f"{self.url_root}/{self.url_base}"
 
+    def dirname(self):
+        name = self.__class__.__name__.lower()
+        return os.path.expanduser(f'~/.cache/gpts/{name}')
+
     def path(self):
-        return os.path.expanduser(f'~/.cache/huggingface/{self.url_base}')
+        return os.path.join(self.dirname(), self.url_base)
 
     def ensure_have_model(self, path=None):
 
