@@ -27,17 +27,19 @@ class Model:
         We'll learn the right abstractions as we go.
     """
 
-    def __init__(self, context_length=2048, verbose=False):
+    def __init__(self, context_length=2048, verbose=False, cpu_only=False):
 
         self.ensure_have_model()
         self.verbose = verbose
         self.gpu_is_available = gpu_is_available() 
+        self.cpu_only = cpu_only
+        gpu = gpu_is_available() and not self.cpu_only
 
         self.llm = Llama(
             model_path = self.path(),
             n_ctx = context_length,
-            n_threads = None if self.gpu_is_available else os.cpu_count(),
-            n_gpu_layers = -1 if self.gpu_is_available else 0,
+            n_threads = None if gpu else os.cpu_count(),
+            n_gpu_layers = -1 if gpu else 0,
             verbose = self.verbose,
         )
 
