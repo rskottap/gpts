@@ -129,3 +129,35 @@ class Mixtral(Model):
     url_root = 'https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main'
     url_base = 'mixtral-8x7b-instruct-v0.1.Q5_K_M.gguf'
 
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+
+class Tranformers():
+    url_root = 'https://huggingface.co'
+    
+    def __init__(self, context_length=2048, verbose=False):
+        self.context_length = context_length
+        self.verbose = verbose
+        self.gpu_is_available = gpu_is_available()
+
+        self.tokenizer = AutoTokenizer.from_pretrained(self.url_base)
+        self.model = AutoModelForCausalLM.from_pretrained(self.url_base, torch_dtype="auto", context_length=self.context_length, verbose=self.verbose)
+
+    def url(self):
+        return f"{self.url_root}/{self.url_base}"
+
+    def path(self):
+        return os.path.expanduser(f'~/.cache/huggingface/hub/models--{self.url_base.replace("/", "--")}')
+    
+    def __call__(self, *args, **kwds):
+        return self.ask(*args, **kwds)
+    
+    def ask(self, question, max_tokens=512):
+        inputs = self.tokenizer(question, return_tensors="pt")
+        output = self.model.generate(**inputs, max_length=max_tokens)
+        return self.tokenizer.decode(output[0], skip_special_tokens=True)
+    
+class Phi2(Tranformers):
+    """ https://huggingface.co/microsoft/phi-2 """
+    
+    url_base = "microsoft/phi-2"
