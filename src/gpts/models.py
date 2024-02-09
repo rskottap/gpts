@@ -90,36 +90,6 @@ class Model:
         else:
             return re.sub(r"[\s\S]*?\[/INST\] ", "", output["choices"][0]["text"])
 
-    def chat(self, user_prompt, system_prompt=None):
-
-        # TODO: Do we need to create a new instance here? It's extremely quick
-        # so this may be simpler than keeping the state. Can we do this for .ask()?
-
-        llm = Llama(
-            model_path = self.path(),
-            chat_format="llama-2",
-            verbose = self.verbose,
-        )
-
-        messages = []
-        if system_prompt:
-            messages.append({
-                "role": "system",
-                "content": system_prompt,
-            })
-
-        messages.append({
-            "role": "user",
-            "content": user_prompt,
-        })
-
-        output = llm.create_chat_completion(messages=messages)
-
-        if self.verbose:
-            return output
-        else:
-            return output['choices'][0]['message']['content'].strip()
-
 
 class Mistral(Model):
 
