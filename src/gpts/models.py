@@ -89,7 +89,7 @@ class Model:
         if self.verbose:
             return output
         else:
-            return re.sub(r"[\s\S]*?\[/INST\]", "", output["choices"][0]["text"])
+            return re.sub(r"[\s\S]*?\[/INST\]\s*", "", output["choices"][0]["text"])
 
 
 class Mistral(Model):
