@@ -115,8 +115,6 @@ class OpenOrca(Model):
     url_base = "mistral-7b-openorca.Q5_K_M.gguf"
 
 ### In Progress
-from transformers import AutoModelForCausalLM, AutoTokenizer
-
 
 class Transformers:
     url_root = 'https://huggingface.co'
@@ -128,6 +126,7 @@ class Transformers:
 
         os.makedirs(self.path(), exist_ok=True)
         # TODO: set context_length
+        from transformers import AutoModelForCausalLM, AutoTokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(self.url_base, cache_dir=self.path())
         self.model = AutoModelForCausalLM.from_pretrained(self.url_base, cache_dir=self.path(), torch_dtype="auto", device_map="auto") 
 
