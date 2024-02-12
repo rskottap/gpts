@@ -69,7 +69,9 @@ class Model:
 
             # use wget instead of requests to make buffering
             # easier and give us a progress bar, this file is big.
-            os.system(f"wget -O {temp_path!r} {url!r}")
+            status = os.system(f"wget -O {temp_path!r} {url!r}")
+            if status != 0:
+                raise RuntimeError(f"Download interrupted. Keeping partial download at {temp_path!r}")
 
             os.rename(temp_path, cache_path)
             print(f"Model file {cache_path!r} downloaded.", file=sys.stderr)
