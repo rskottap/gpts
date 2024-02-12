@@ -2,13 +2,16 @@ __all__ = [
     'Mistral',
     'Mixtral',
     'OpenOrca',
+    'Phi2',
+    'OrcaMini3b',
 ]
 
 
+import contextlib
 import os
 import re
 import sys
-import contextlib
+from abc import ABC
 
 
 def gpu_is_available():
@@ -94,8 +97,9 @@ class Llama:
         if type not in types:
             raise TypeError(f"type must be one of: {types!r}")
 
-        import minml
         import guidance
+
+        import minml
         methods = {
             bool:   minml.gen_bool,
             int:    minml.gen_int,
@@ -138,35 +142,111 @@ class OpenOrca(Llama):
 
 ### In Progress
 
-class Transformers:
+class Transformers(ABC):
     url_root = 'https://huggingface.co'
+    cache_dir = os.path.expanduser('~/.cache/gpts/hf')
     
-    def __init__(self, context_length=2048, verbose=False):
-        self.context_length = context_length
+    def __init__(self, verbose=False):
         self.verbose = verbose
-        self.gpu_is_available = gpu_is_available()
+        # self.gpu_is_available = gpu_is_available()
 
         os.makedirs(self.path(), exist_ok=True)
         # TODO: set context_length
+
         from transformers import AutoModelForCausalLM, AutoTokenizer
-        self.tokenizer = AutoTokenizer.from_pretrained(self.url_base, cache_dir=self.path())
-        self.model = AutoModelForCausalLM.from_pretrained(self.url_base, cache_dir=self.path(), torch_dtype="auto", device_map="auto") 
+        self.tokenizer = AutoTokenizer.from_pretrained(self.url_base, cache_dir=self.cache_dir, **self.tokenizer_args)
+        self.model = AutoModelForCausalLM.from_pretrained(self.url_base, cache_dir=self.cache_dir, **self.model_args)
+
 
     def url(self):
         return f"{self.url_root}/{self.url_base}"
 
     def path(self):
-        return os.path.expanduser(f'~/.cache/gpts/hf/models--{self.url_base.replace("/", "--")}')
+        return os.path.expanduser(f'{self.cache_dir}/models--{self.url_base.replace("/", "--")}')
     
     def __call__(self, *args, **kwds):
         return self.ask(*args, **kwds)
     
     def ask(self, question, max_tokens=512):
-        inputs = self.tokenizer(question, return_tensors="pt")
-        output = self.model.generate(**inputs, max_length=max_tokens)
-        return self.tokenizer.decode(output[0], skip_special_tokens=True)
+        raise NotImplementedError
+
     
 class OrcaMini3b(Transformers):
     """ https://huggingface.co/psmathur/orca_mini_3b """
     
+    import torch
     url_base = "psmathur/orca_mini_3b"
+
+    tokenizer_args = {}
+    model_args = {
+        "torch_dtype":torch.float16,
+        "device_map":'auto',
+    }
+    gen_args = {'top_p': 1.0, 'temperature':0.7, 'generate_len': 512, 'top_k': 50}
+    system = 'You are an AI assistant that follows instruction extremely well. Help as much as you can.'
+
+    #generate text function
+    def ask(self, instruction, gen_args=None, system=None, input=None):
+        if system is None:
+            system = self.system
+        if gen_args is None:
+            gen_args = self.gen_args
+        if input:
+            prompt = f"### System:\n{system}\n\n### User:\n{instruction}\n\n### Input:\n{input}\n\n### Response:\n"
+        else:
+            prompt = f"### System:\n{system}\n\n### User:\n{instruction}\n\n### Response:\n"
+
+        tokens = self.tokenizer.encode(prompt)
+        if gpu_is_available():
+            tokens = self.torch.LongTensor(tokens).unsqueeze(0)
+            tokens = tokens.to('cuda')
+
+        length = len(tokens[0])
+        with self.torch.no_grad():
+            rest = self.model.generate(
+                input_ids=tokens,
+                max_length=length+gen_args['generate_len'],
+                use_cache=True,
+                do_sample=True,
+                top_p=gen_args['top_p'],
+                temperature=gen_args['temperature'],
+                top_k=gen_args['top_k']
+            )
+        if not self.verbose:
+            output = rest[0][length:]
+        string = self.tokenizer.decode(output, skip_special_tokens=True)
+        return string
+
+
+class Phi2(Transformers):
+    """ https://huggingface.co/microsoft/phi-2 """
+    
+    url_base = "microsoft/phi-2"
+    tokenizer_args = {
+        "torch_dtype":"auto", 
+        "trust_remote_code":True
+    }
+    model_args = {
+        "trust_remote_code":True
+    }
+    gen_args = {}
+
+    def __init__(self, verbose=False):
+        if gpu_is_available():
+            import torch
+            torch.set_default_device("cuda")
+
+        super().__init__(verbose)
+
+        if self.tokenizer.pad_token_id is None:
+            self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
+
+    def ask(self, question, max_tokens=128, gen_args=None):
+        if gen_args is None:
+            gen_args = self.gen_args
+        inputs = self.tokenizer(question, return_tensors="pt", return_attention_mask=True)
+        output = self.model.generate(**inputs, pad_token_id=self.tokenizer.pad_token_id, max_length=max_tokens, **gen_args)
+        output =  self.tokenizer.decode(output[0])
+        if not self.verbose:
+            output = output[len(question):]
+        return output
