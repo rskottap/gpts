@@ -1,6 +1,8 @@
 __all__ = [
     'Mistral',
     'Mixtral',
+    'OrcaMini3b',
+    'OpenOrca',
 ]
 
 
@@ -106,10 +108,16 @@ class Mixtral(Model):
     url_root = 'https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main'
     url_base = 'mixtral-8x7b-instruct-v0.1.Q5_K_M.gguf'
 
+class OpenOrca(Model):
+    """ https://huggingface.co/TheBloke/Mistral-7B-OpenOrca-GGUF"""
+
+    url_root = "https://huggingface.co/TheBloke/Mistral-7B-OpenOrca-GGUF/resolve/main"
+    url_base = "mistral-7b-openorca.Q5_K_M.gguf"
+
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
-class Tranformers():
+class Transformers:
     url_root = 'https://huggingface.co'
     
     def __init__(self, context_length=2048, verbose=False):
@@ -117,14 +125,16 @@ class Tranformers():
         self.verbose = verbose
         self.gpu_is_available = gpu_is_available()
 
-        self.tokenizer = AutoTokenizer.from_pretrained(self.url_base)
-        self.model = AutoModelForCausalLM.from_pretrained(self.url_base, torch_dtype="auto", context_length=self.context_length, verbose=self.verbose)
+        os.makedirs(self.path(), exist_ok=True)
+        # TODO: set context_length
+        self.tokenizer = AutoTokenizer.from_pretrained(self.url_base, cache_dir=self.path())
+        self.model = AutoModelForCausalLM.from_pretrained(self.url_base, cache_dir=self.path(), torch_dtype="auto", device_map="auto") 
 
     def url(self):
         return f"{self.url_root}/{self.url_base}"
 
     def path(self):
-        return os.path.expanduser(f'~/.cache/huggingface/hub/models--{self.url_base.replace("/", "--")}')
+        return os.path.expanduser(f'~/.cache/gpts/hf/models--{self.url_base.replace("/", "--")}')
     
     def __call__(self, *args, **kwds):
         return self.ask(*args, **kwds)
@@ -134,7 +144,7 @@ class Tranformers():
         output = self.model.generate(**inputs, max_length=max_tokens)
         return self.tokenizer.decode(output[0], skip_special_tokens=True)
     
-class Phi2(Tranformers):
-    """ https://huggingface.co/microsoft/phi-2 """
+class OrcaMini3b(Transformers):
+    """ https://huggingface.co/psmathur/orca_mini_3b """
     
-    url_base = "microsoft/phi-2"
+    url_base = "psmathur/orca_mini_3b"
