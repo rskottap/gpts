@@ -9,6 +9,7 @@ description = "Unix language driver for software 2.0"
 dependencies = [
     "llama-cpp-python",
     "transformers",
+    "accelerate",
 ]
 
 [project.optional-dependencies]
