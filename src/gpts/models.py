@@ -1,7 +1,6 @@
 __all__ = [
     'Mistral',
     'Mixtral',
-    'OrcaMini3b',
     'OpenOrca',
 ]
 
@@ -90,7 +89,7 @@ class Model:
         if self.verbose:
             return output
         else:
-            return re.sub(r"[\s\S]*?\[/INST\] ", "", output["choices"][0]["text"])
+            return re.sub(r"[\s\S]*?\[/INST\]", "", output["choices"][0]["text"])
 
 
 class Mistral(Model):
@@ -108,12 +107,14 @@ class Mixtral(Model):
     url_root = 'https://huggingface.co/TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF/resolve/main'
     url_base = 'mixtral-8x7b-instruct-v0.1.Q5_K_M.gguf'
 
+
 class OpenOrca(Model):
     """ https://huggingface.co/TheBloke/Mistral-7B-OpenOrca-GGUF"""
 
     url_root = "https://huggingface.co/TheBloke/Mistral-7B-OpenOrca-GGUF/resolve/main"
     url_base = "mistral-7b-openorca.Q5_K_M.gguf"
 
+### In Progress
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 

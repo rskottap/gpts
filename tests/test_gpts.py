@@ -14,3 +14,7 @@ def test_mistral_ask():
 def test_mixtral_ask():
     model = gpts.Mixtral(cpu_only=True)
     ask(model)
+
+def test_openorca_ask():
+    model = gpts.OpenOrca(cpu_only=True)
+    ask(model)

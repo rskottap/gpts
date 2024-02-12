@@ -1,6 +1,6 @@
 [project]
 name = "gpts"
-version = "0.0.6"
+version = "0.0.7"
 authors = [
     { name="Ramya Kottapalli", email="rskottap@gmail.com" },
     { name="Jason Wilkes", email="notarealdeveloper@gmail.com" },
