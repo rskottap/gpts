@@ -8,8 +8,7 @@ __all__ = [
 import os
 import re
 import sys
-
-from llama_cpp import Llama
+import contextlib
 
 
 def gpu_is_available():
@@ -20,13 +19,7 @@ def gpu_is_available():
         return False
 
 
-class Model:
-
-    """
-        Leave the public interface here underspecified until we have
-        at least one non-mistrell.ai model we want to support.
-        We'll learn the right abstractions as we go.
-    """
+class Llama:
 
     def __init__(self, context_length=2048, verbose=False, cpu_only=False):
 
@@ -36,7 +29,8 @@ class Model:
         self.cpu_only = cpu_only
         gpu = gpu_is_available() and not self.cpu_only
 
-        self.llm = Llama(
+        import llama_cpp
+        self.llm = llama_cpp.Llama(
             model_path = self.path(),
             n_ctx = context_length,
             n_threads = None if gpu else os.cpu_count(),
@@ -94,7 +88,33 @@ class Model:
             return re.sub(r"[\s\S]*?\[/INST\]\s*", "", output["choices"][0]["text"])
 
 
-class Mistral(Model):
+    def ask_for(self, question, type):
+
+        types = (bool, int, float, str, list)
+        if type not in types:
+            raise TypeError(f"type must be one of: {types!r}")
+
+        import minml
+        import guidance
+        methods = {
+            bool:   minml.gen_bool,
+            int:    minml.gen_int,
+            float:  minml.gen_float,
+            str:    minml.gen_str,
+            list:   minml.gen_list,
+        }
+        method = methods[type]
+
+        with contextlib.redirect_stdout(open(os.devnull, 'w')):
+            guide = guidance.models.LlamaCpp(self.llm)
+            guide += question
+            with guidance.block("answer"):
+                guide += method()
+
+        return type(guide['answer'])
+
+
+class Mistral(Llama):
 
     """ https://mistral.ai/news/announcing-mistral-7b """
 
@@ -102,7 +122,7 @@ class Mistral(Model):
     url_base = 'mistral-7b-instruct-v0.2.Q8_0.gguf'
 
 
-class Mixtral(Model):
+class Mixtral(Llama):
 
     """ https://mistral.ai/news/mixtral-of-experts """
 
@@ -110,7 +130,7 @@ class Mixtral(Model):
     url_base = 'mixtral-8x7b-instruct-v0.1.Q5_K_M.gguf'
 
 
-class OpenOrca(Model):
+class OpenOrca(Llama):
     """ https://huggingface.co/TheBloke/Mistral-7B-OpenOrca-GGUF"""
 
     url_root = "https://huggingface.co/TheBloke/Mistral-7B-OpenOrca-GGUF/resolve/main"
