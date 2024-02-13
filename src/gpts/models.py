@@ -97,9 +97,8 @@ class Llama:
         if type not in types:
             raise TypeError(f"type must be one of: {types!r}")
 
-        import guidance
-
         import minml
+        import guidance
         methods = {
             bool:   minml.gen_bool,
             int:    minml.gen_int,
