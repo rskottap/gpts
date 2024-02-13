@@ -10,6 +10,8 @@ dependencies = [
     "llama-cpp-python",
     "transformers",
     "accelerate",
+    "guidance",
+    "minml",
 ]
 
 [project.optional-dependencies]
